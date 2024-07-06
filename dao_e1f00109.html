@@ -1,0 +1,532 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <title>DAO Information</title>
+        <meta charset="utf-8">
+        <script src="web3.min.js"></script>
+        <style>
+		body{
+			font-family: "Comic Sans MS", "Comic Sans", cursive
+		}
+		</style>
+    </head>
+    <body style="margin-top:0">
+        <h2>DAO Information</h2>
+        <p>DAO's purpose: <span id="purpose"></span></p>
+		<p>How to join: <span id="howToJoin"></span></p>
+		<p>Curator: <span id="curator"></span></p>
+		<p>NFT Manager: <span id="tokens"></span></p>
+        <p>Proposals: <span id="numberOfProposals"></span></p> <!-- line 12 -->
+        <table id="proposals"></table>
+        <script>
+            const contractAddress = "0xd07079C5814550869CC315545123ec7F9cbCf854";
+            const web3 = new Web3('wss://andromeda.cs.virginia.edu/geth');
+			abi = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "proposalID",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			}
+		],
+		"name": "NewProposal",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "proposalID",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "bool",
+				"name": "result",
+				"type": "bool"
+			}
+		],
+		"name": "ProposalClosed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "proposalID",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "bool",
+				"name": "position",
+				"type": "bool"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "voter",
+				"type": "address"
+			}
+		],
+		"name": "Voted",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "who",
+				"type": "address"
+			}
+		],
+		"name": "addMember",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "proposalID",
+				"type": "uint256"
+			}
+		],
+		"name": "closeProposal",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "curator",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "howToJoin",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "who",
+				"type": "address"
+			}
+		],
+		"name": "isMember",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "minProposalDebatePeriod",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "debatingPeriod",
+				"type": "uint256"
+			}
+		],
+		"name": "newProposal",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "numberOfProposals",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "proposals",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "votingDeadline",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "open",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "proposalPassed",
+				"type": "bool"
+			},
+			{
+				"internalType": "uint256",
+				"name": "yea",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "nay",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "creator",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "purpose",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "requestMembership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "reservedEther",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "str",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "startIndex",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "endIndex",
+				"type": "uint256"
+			}
+		],
+		"name": "substring",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes4",
+				"name": "interfaceId",
+				"type": "bytes4"
+			}
+		],
+		"name": "supportsInterface",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "tokens",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "proposalID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "supportsProposal",
+				"type": "bool"
+			}
+		],
+		"name": "vote",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "votedNo",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "votedYes",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "receive"
+	}
+]			
+			contract = new web3.eth.Contract(abi,contractAddress);
+
+			const getHeader = async() =>{
+				const header ={
+					"purpose": await contract.methods.purpose().call(),
+					"howToJoin": await contract.methods.howToJoin().call(),
+					"curator": await contract.methods.curator().call(),
+					"tokens": await contract.methods.tokens().call()
+				}
+				return header;
+			}
+			function setHeader(){
+				getHeader().then(header =>{
+					document.getElementById('purpose').innerHTML = header["purpose"];
+					document.getElementById('howToJoin').innerHTML = header["howToJoin"];
+					document.getElementById('curator').innerHTML = header["curator"];
+					document.getElementById('tokens').innerHTML = header["tokens"];
+				})
+			}
+			setHeader();
+
+			function setTable(){
+				let numberOfProposals = async() =>{
+					return await contract.methods.numberOfProposals().call();
+				}
+
+				const getTableEntry = async(i) =>{
+					return await contract.methods.proposals(i).call();
+				}
+				const setTableEntry = async(i) =>{
+					getTableEntry(i).then(tableEntry =>{
+						document.getElementById("ID_" + i).innerHTML = i;
+						document.getElementById("Recipient_" + i).innerHTML = tableEntry[0];
+						document.getElementById("Amount_" + i).innerHTML = tableEntry[1];
+						document.getElementById("Description_" + i).innerHTML = tableEntry[2];
+						document.getElementById("Deadline_" + i).innerHTML = tableEntry[3];
+						document.getElementById("Active_" + i).innerHTML = tableEntry[4];
+						document.getElementById("Outcome_" + i).innerHTML = tableEntry[5];
+						document.getElementById("Yay_" + i).innerHTML = tableEntry[6];
+						document.getElementById("Nay_" + i).innerHTML = tableEntry[7];
+						document.getElementById("Creator_" + i).innerHTML = tableEntry[8];
+					})
+				}
+				numberOfProposals().then(numberOfProposals =>{
+					document.getElementById("numberOfProposals").innerHTML = numberOfProposals;
+					text = "<tr><th>ID</th><th>Recipient</th><th>Amount(ETH)</th><th>Description</th><th>Deadline</th>\
+							<th>Active</th><th>Outcome</th><th>Yay</th><th>Neigh</th><th>Creator</th></tr>";
+					for (var i = 0; i < numberOfProposals; i++)
+						text += "<tr><td id=ID_" + i + ">" + i + "</td><td id=Recipient_" + i + "></td><td id=Amount_" + i + ">\
+								 </td><td id=Description_" + i + "></td><td id=Deadline_" + i + "></td><td id=Active_" + i + "></td>\
+								 <td id=Outcome_" + i + "></td></td><td id=Yay_" + i + "></td></td><td id=Nay_" + i + "></td></td><td id=Creator_" + i + "></td></tr>";
+					document.getElementById("proposals").innerHTML = text;
+					for (var i = 0; i < numberOfProposals; i++)
+						setTableEntry(i);
+				})
+			}
+			// setTable();
+
+			function subscribeToPollEvents(){
+				let options = {address: contractAddress};
+				let sub = web3.eth.subscribe("logs", options);
+				sub.on("data", event => setTable())
+				sub.on('error', err => { throw err })
+			}
+			subscribeToPollEvents();
+			setTable();
+		</script>
+    </body>
+</html>
+
+<!--
+	ID 	Recipient 	Amount(ETH) 	Description 	Voting deadline 	Open? 	Did it pass? 	Yes votes 	No votes 	Creator
+-->
